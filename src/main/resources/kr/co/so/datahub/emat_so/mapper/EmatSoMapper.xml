@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.so.datahub.emat_so.mapper.EmatSoMapper">
+    <resultMap id="NodeInfoDtoResultMap" type="NodeInfoDto">
+        <result property="nodeId"       column="NODE_ID"/>
+        <result property="deviceId"     column="DEVICE_ID"/>
+    </resultMap>
+
+    <resultMap id="DeviceDtoResultMap" type="DeviceDto">
+        <result property="deviceId"     column="DEVICE_ID"/>
+        <result property="deviceName"   column="DEVICE_NAME"/>
+        <result property="deviceStatus" column="DEVICE_STATUS"/>
+    </resultMap>
+
+    <resultMap id="SensorInfoDtoResultMap" type="SensorInfoDto">
+        <result property="sensorId"     column="SENSOR_ID"/>
+        <result property="deviceId"     column="DEVICE_ID"/>
+        <result property="typeId"       column="TYPE_ID"/>
+        <result property="sensorName"   column="SENSOR_NAME"/>
+        <result property="manufacturer" column="MANUFACTURER"/>
+        <result property="serialNum"    column="SERIAL_NUM"/>
+        <result property="visible"      column="VISIBLE"/>
+        <result property="installDate"  column="INSTALL_DATE"/>
+        <result property="description"  column="DESCRIPTION"/>
+        <result property="sensorStatus" column="SENSOR_STATUS"/>
+        <result property="offsetValue"  column="OFFSET_VALUE"/>
+        <result property="calA"         column="CAL_A"/>
+        <result property="calB"         column="CAL_B"/>
+        <result property="calC"         column="CAL_C"/>
+    </resultMap>
+
+    <resultMap id="SensorTypeInfoDtoResultMap" type="SensorTypeInfoDto">
+        <result property="nodeId"       column="NODE_ID"/>
+        <result property="ctn"          column="CTN"/>
+        <result property="sensorId"     column="SENSOR_ID"/>
+        <result property="typeId"       column="TYPE_ID"/>
+        <result property="typeCode"     column="TYPE_CODE"/>
+    </resultMap>
+
+    <resultMap id="CommandLogDtoResultMap" type="CommandLogDto">
+        <result property="commandId"    column="COMMAND_ID"/>
+        <result property="nodeId"       column="NODE_ID"/>
+        <result property="deviceId"     column="DEVICE_ID"/>
+        <result property="command"      column="COMMAND"/>
+        <result property="sendData"     column="SEND_DATA"/>
+    </resultMap>
+
+
+
+
+
+
+
+
+
+
+    <select id="selectDeviceByNodeId" parameterType="String" resultMap="DeviceDtoResultMap">
+        select d.*
+        from device_info d, node_info i
+        where i.node_id = #{id} and i.device_id = d.device_id
+    </select>
+
+    <select id="selectDeviceByDeviceId" parameterType="String" resultMap="DeviceDtoResultMap">
+        select d.*
+        from device_info d
+        where d.device_id = #{id}
+    </select>
+
+    <select id="selectDeviceByCtn" parameterType="String" resultMap="DeviceDtoResultMap">
+        select d.*
+        from device_info d, node_info i
+        where i.node_id = #{id} and i.device_id = d.device_id
+    </select>
+
+    <select id="selectNodeInfoByCtn" parameterType="String" resultMap="NodeInfoDtoResultMap">
+        select *
+        from node_info
+        where ctn=#{id}
+    </select>
+
+    <select id="selectSensorInfoByDeviceId" parameterType="String" resultMap="SensorInfoDtoResultMap">
+        select s.*
+        from sensor_info s
+        where s.deviceId=#{id}
+    </select>
+
+    <select id="selectSensorTypeByNodeId" parameterType="String" resultMap="SensorTypeInfoDtoResultMap">
+        SELECT S.SENSOR_ID, T.TYPE_ID, T.TYPE_CODE, N.NODE_ID, N.CTN
+        FROM node_info n, sensor_info s, sensor_type_info t
+        WHERE n.ctn=#{id}
+          AND n.DEVICE_ID = s.DEVICE_ID
+          AND s.TYPE_ID = t.TYPE_ID
+    </select>
+
+    <select id="selectCommandLogByNodeId" parameterType="String" resultMap="CommandLogDtoResultMap">
+        SELECT c.*
+        FROM command_log c, node_info n
+        WHERE n.ctn=#{id}
+          AND n.node_id = c.node_id
+          AND c.COMMAND_STATUS = 0
+        ORDER BY c.RECORD_DT
+    </select>
+
+    <update id="updateCommandLogByCommandId" parameterType="String">
+        update command_log
+        set command_status = 1, send_dt = now()
+        where command_id = #{id}
+    </update>
+
+
+
+
+
+
+
+    <insert id="insertSensorData" parameterType="SensorDataDto">
+        insert into sensor_data (sensor_id, data_value, measure_dt, record_dt) values
+            (#{sensorId}, #{dataValue}, #{measureDt}, now())
+    </insert>
+
+    <insert id="insertRecentData" parameterType="SensorDataDto">
+        insert into recent_data (sensor_id, data_value, measure_dt, record_dt) values
+            (#{sensorId}, #{dataValue}, #{measureDt}, now())
+    </insert>
+
+    <update id="updateRecentData" parameterType="SensorDataDto">
+        update recent_data
+        set data_value = #{dataValue}, measure_dt = #{measureDt}, record_dt = now()
+        where sensor_id = #{sensorId}
+    </update>
+
+</mapper>
